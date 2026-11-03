@@ -13,10 +13,18 @@ THRESHOLD = 50_000
 
 def read_sales(path: Path = DATA_PATH) -> list[dict[str, str]]:
     """Read the CSV with the csv module and return the raw rows."""
-    with open(path, newline="", encoding="utf-8-sig") as file:
-        reader = csv.DictReader(file)
-        rows = list(reader)
-        
+    try:
+        with open(path, newline="", encoding="utf-8-sig") as file:
+            reader = csv.DictReader(file)
+            rows = list(reader)
+            print(f"Rows read: {len(rows)}")
+            print(f"Columns: {reader.fieldnames}")
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"Sales file not found: {path}\n"
+            "Put electronics_sales.csv in the data/ folder and run the script "
+            "from the project root."
+        ) from None
     return rows
 
 
@@ -389,7 +397,12 @@ def write_report(report_path: Path, report: str) -> None:
 
 
 def main() -> None:
-    results = analyse()
+    try:
+        results = analyse()
+    except FileNotFoundError as error:
+        print(f"Error: {error}")
+        raise SystemExit(1)
+
     verification_lines = verify_with_pandas(DATA_PATH, results)
     report = build_report(results, verification_lines)
 
